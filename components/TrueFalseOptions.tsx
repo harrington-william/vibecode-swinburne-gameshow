@@ -24,7 +24,7 @@ export default function TrueFalseOptions({
 }: TrueFalseOptionsProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {CHOICES.map((choice) => {
+      {CHOICES.map((choice, index) => {
         const isCorrect = choice.value === question.answer;
         const chosenBy = revealed
           ? TEAM_IDS.filter((team) => answers[team]?.value === choice.value)
@@ -39,13 +39,15 @@ export default function TrueFalseOptions({
 
         return (
           <button
-            key={choice.label}
+            // Question id in the key so the pop-in replays on every new question.
+            key={`${question.id}-${choice.label}`}
             type="button"
             disabled={revealed || activeTeam === null}
             onClick={() => onAnswer(choice.value)}
-            className={`squish sticker flex flex-col items-center gap-1 rounded-3xl px-4 py-5 ${skin}`}
+            style={{ "--i": index } as React.CSSProperties}
+            className={`anim-pop-stagger squish sticker flex flex-col items-center gap-1 rounded-3xl px-4 py-5 ${skin}`}
           >
-            <span className="text-4xl">{choice.emoji}</span>
+            <span className={`text-4xl ${revealed ? "" : "anim-bounce"}`}>{choice.emoji}</span>
             <span className="font-display text-2xl font-black">
               {choice.label}
             </span>

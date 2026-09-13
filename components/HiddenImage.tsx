@@ -10,11 +10,12 @@ type HiddenImageProps = {
 
 /**
  * Layer 1 — the photo.
- * Layer 2 — one square in the middle.
+ * Layer 2 — one big rectangle in the middle (~80% × 84% of the frame).
  * Layer 3 — four squares in the corners, sitting on top of the middle one.
  *
- * Peeling the four corners (questions 1-4) leaves the middle square still
- * covering the heart of the photo; question 5 lifts that one too.
+ * Peeling the four corners (questions 1-4) only exposes a thin border of the
+ * photo around the middle tile, so teams can't be sure of the dish until
+ * question 5 lifts that last tile too.
  */
 const CORNERS = [
   { key: "tl", position: "top-0 left-0", emoji: "🥄" },
@@ -26,11 +27,25 @@ const CORNERS = [
 const TILE_SKIN =
   "flex items-center justify-center border-4 border-ink bg-[linear-gradient(135deg,#5c3a35_0%,#7b4f47_50%,#5c3a35_100%)] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]";
 
-function Badge({ n, emoji }: { n: number; emoji: string }) {
+function Badge({
+  n,
+  emoji,
+  big = false,
+}: {
+  n: number;
+  emoji: string;
+  big?: boolean;
+}) {
   return (
     <span className="flex flex-col items-center gap-1 text-white/90">
-      <span className="text-2xl sm:text-4xl">{emoji}</span>
-      <span className="font-display text-3xl font-black drop-shadow sm:text-5xl">
+      <span className={`anim-bounce ${big ? "text-4xl sm:text-6xl" : "text-2xl sm:text-4xl"}`}>
+        {emoji}
+      </span>
+      <span
+        className={`font-display font-black drop-shadow ${
+          big ? "text-5xl sm:text-7xl" : "text-3xl sm:text-5xl"
+        }`}
+      >
         {n}
       </span>
     </span>
@@ -60,13 +75,13 @@ export default function HiddenImage({
 
         {/* Layer 2 — the middle square, revealed last */}
         <div
-          className={`absolute left-1/2 top-1/2 z-10 aspect-square h-[54%] -translate-x-1/2 -translate-y-1/2 rounded-2xl ${TILE_SKIN} ${
+          className={`absolute left-1/2 top-1/2 z-10 h-[84%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-2xl ${TILE_SKIN} ${
             revealed >= 5
               ? "pointer-events-none scale-50 rotate-12 opacity-0"
               : "opacity-100"
           }`}
         >
-          <Badge n={5} emoji="⭐" />
+          <Badge n={5} emoji="⭐" big />
         </div>
 
         {/* Layer 3 — the four corners, revealed one per question */}

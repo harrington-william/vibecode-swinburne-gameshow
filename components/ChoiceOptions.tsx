@@ -45,11 +45,13 @@ export default function ChoiceOptions({
 
         return (
           <button
-            key={option}
+            // Question id in the key so the pop-in replays on every new question.
+            key={`${question.id}-${option}`}
             type="button"
             disabled={revealed || activeTeam === null}
             onClick={() => onAnswer(index)}
-            className={`squish sticker flex items-start gap-3 rounded-3xl px-4 py-4 text-left ${skin}`}
+            style={{ "--i": index } as React.CSSProperties}
+            className={`anim-pop-stagger squish sticker flex items-start gap-3 rounded-3xl px-4 py-4 text-left ${skin}`}
           >
             <span className="sticker-sm flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white font-display text-lg font-black text-ink">
               {OPTION_LETTERS[index]}

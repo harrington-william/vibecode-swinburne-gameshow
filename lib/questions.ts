@@ -1,6 +1,7 @@
 /**
  * All 15 questions for the show, transcribed from questions.txt.
  * Round 1: 7 multiple choice (5 pts) · Round 2: 5 true/false (10 pts) · Round 3: 3 fill-in-the-blank (15 pts)
+ * Every question gets its own 60-second clock.
  */
 
 export type TeamId = "t1" | "t2";
@@ -46,7 +47,8 @@ export type Round = {
   /** Short "how this round works" lines shown on the round intro card */
   rules: string[];
   pointsPerQuestion: number;
-  durationSeconds: number;
+  /** Countdown for each individual question — the game carries on when it hits zero. */
+  secondsPerQuestion: number;
   questions: Question[];
 };
 
@@ -62,7 +64,7 @@ export const ROUNDS: Round[] = [
       "Both teams answer every question",
     ],
     pointsPerQuestion: 5,
-    durationSeconds: 300,
+    secondsPerQuestion: 60,
     questions: [
       {
         kind: "choice",
@@ -173,7 +175,7 @@ export const ROUNDS: Round[] = [
       "Guess the mystery dish hiding underneath!",
     ],
     pointsPerQuestion: 10,
-    durationSeconds: 300,
+    secondsPerQuestion: 60,
     questions: [
       {
         kind: "boolean",
@@ -249,53 +251,53 @@ export const ROUNDS: Round[] = [
     tagline: "Hard · Fill in the blank",
     rules: [
       "3 final questions worth triple points",
-      "Type the name of the dish — spelling is forgiving",
+      "Type the missing word — spelling is forgiving",
       "Every question comes with a hint 💡",
     ],
     pointsPerQuestion: 15,
-    durationSeconds: 300,
+    secondsPerQuestion: 60,
     questions: [
       {
         kind: "blank",
         id: 13,
-        flag: "🇲🇽",
-        country: "Mexico",
-        occasion: "Día de los Muertos",
+        flag: "🇺🇸",
+        country: "USA",
+        occasion: "Thanksgiving",
         prompt:
-          "In Mexico, Día de los Muertos is a colorful celebration that honors deceased family members. A traditional sweet bread, often decorated with shapes representing bones, is placed on family altars and shared during the festival. This bread is called __________.",
-        answer: "Pan de Muerto",
-        accept: ["pan de muerto", "pan de muertos", "pandemuerto"],
-        hint: "If you've watched Pixar's Coco, you have probably seen this celebration. 💀🌼",
+          "On Thanksgiving, Americans often eat __________ with their family. 🦃",
+        answer: "Turkey",
+        accept: ["turkey", "turkeys", "roast turkey", "a turkey"],
+        hint: "A big bird!",
         explanation:
-          'Pan de muerto means "bread of the dead" and is strongly associated with the festival.',
+          "Roast turkey is the centrepiece of the traditional American Thanksgiving dinner.",
       },
       {
         kind: "blank",
         id: 14,
-        flag: "🇧🇷",
-        country: "Brazil",
-        occasion: "Festa Junina",
+        flag: "🇲🇽",
+        country: "Mexico",
+        occasion: "Día de los Muertos",
         prompt:
-          "During Brazil's Festa Junina, people enjoy music, dancing, traditional costumes and many corn-based foods. One famous food is made from grated green corn and cooked inside corn husks. It is called __________.",
-        answer: "Pamonha",
-        accept: ["pamonha", "pamonhas"],
-        hint: "Brazil + June festival + 🌽 = ?",
+          "During the Day of the Dead, Mexican people often eat a traditional sweet bread called __________. 💀🍞",
+        answer: "Pan de Muerto",
+        accept: ["pan de muerto", "pan de muertos", "pandemuerto", "pan muerto"],
+        hint: "Its name means “bread of the dead.”",
         explanation:
-          "Pamonha is a traditional Brazilian corn dish commonly eaten during Festa Junina.",
+          'Pan de muerto means "bread of the dead" and is placed on family altars during the festival.',
       },
       {
         kind: "blank",
         id: 15,
-        flag: "🇦🇷",
-        country: "Argentina",
-        occasion: "Christmas",
+        flag: "🇨🇦",
+        country: "Canada",
+        occasion: "Thanksgiving",
         prompt:
-          "Christmas in Argentina happens during the summer, so families may celebrate with outdoor meals. A famous Christmas sweet bread containing dried fruits and nuts is commonly served during the holiday season. It is called __________.",
-        answer: "Pan Dulce",
-        accept: ["pan dulce", "pan dulces", "pandulce"],
-        hint: "Argentina + Christmas + summer ☀️🎄 + sweet bread.",
+          "A popular dessert for Thanksgiving in Canada is __________ pie. 🥧",
+        answer: "Pumpkin",
+        accept: ["pumpkin", "pumpkins", "pumpkin pie"],
+        hint: "It is orange and often used for Halloween too! 🎃",
         explanation:
-          'Pan dulce means "sweet bread" and is a popular Christmas food in Argentina.',
+          "Pumpkin pie is a classic Thanksgiving dessert in Canada, served in October when the harvest comes in.",
       },
     ],
   },

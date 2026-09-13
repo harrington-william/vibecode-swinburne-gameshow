@@ -151,6 +151,193 @@ body {
   }
 }
 
+@keyframes score-drop {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+  15% {
+    transform: translateX(-8px) scale(0.92);
+  }
+  30% {
+    transform: translateX(8px) scale(0.92);
+  }
+  45% {
+    transform: translateX(-6px) scale(0.95);
+  }
+  60% {
+    transform: translateX(6px) scale(0.95);
+  }
+  75% {
+    transform: translateX(-3px) scale(1);
+  }
+}
+
+/* The little "+5" / "-15" badge that floats off a score card */
+@keyframes float-away {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) scale(1);
+  }
+}
+
+/* Stronger, faster wobble for the team whose turn it is */
+@keyframes wiggle-strong {
+  0%,
+  100% {
+    transform: rotate(-5deg) scale(1.04);
+  }
+  25% {
+    transform: rotate(4deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1.04);
+  }
+  75% {
+    transform: rotate(5deg) scale(1.1);
+  }
+}
+
+@keyframes glow-ring {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 0 0 var(--color-ink),
+      0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow:
+      0 4px 0 0 var(--color-ink),
+      0 0 0 12px rgba(255, 180, 67, 0.55);
+  }
+}
+
+/* The turn hand-off "BOOM" card */
+@keyframes boom-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-14deg);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.18) rotate(4deg);
+  }
+  55% {
+    transform: scale(0.96) rotate(-2deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3) rotate(0deg);
+  }
+}
+
+@keyframes boom-backdrop {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* One emoji shard flying outwards from the centre; --angle set inline */
+@keyframes boom-shard {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(0) scale(0.4);
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(var(--reach, 200px)) scale(1.2);
+  }
+}
+
+@keyframes shockwave {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+/* A rubber-stamp landing for "locked in" chips */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.8) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.18);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes spin-wobble {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+}
+
 .anim-pop {
   animation: pop-in 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -179,6 +366,60 @@ body {
   animation: score-bump 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.anim-drop {
+  animation: score-drop 600ms ease-in-out;
+}
+
+.anim-float-away {
+  animation: float-away 1.3s ease-out both;
+}
+
+.anim-wiggle-strong {
+  animation:
+    wiggle-strong 0.7s ease-in-out infinite,
+    glow-ring 1.4s ease-in-out infinite;
+}
+
+.anim-boom {
+  animation: boom-in 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.anim-boom-backdrop {
+  animation: boom-backdrop 1.5s ease-in-out both;
+}
+
+.anim-boom-shard {
+  animation: boom-shard 1.3s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.anim-shockwave {
+  animation: shockwave 0.9s ease-out both;
+}
+
+.anim-stamp {
+  animation: stamp-in 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.anim-bounce {
+  animation: bounce-soft 1.6s ease-in-out infinite;
+}
+
+.anim-heartbeat {
+  animation: heartbeat 1.2s ease-in-out infinite;
+}
+
+.anim-spin-wobble {
+  animation: spin-wobble 1.8s ease-in-out infinite;
+}
+
+/* Staggered entrance for lists of options — set --i inline.
+   `backwards` (not `both`) so the finished animation releases `transform`
+   and the .squish hover/press still works afterwards. */
+.anim-pop-stagger {
+  animation: pop-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .anim-pop,
   .anim-slide,
@@ -186,7 +427,19 @@ body {
   .anim-wiggle,
   .anim-attention,
   .anim-flash,
-  .anim-bump {
+  .anim-bump,
+  .anim-drop,
+  .anim-float-away,
+  .anim-wiggle-strong,
+  .anim-boom,
+  .anim-boom-backdrop,
+  .anim-boom-shard,
+  .anim-shockwave,
+  .anim-stamp,
+  .anim-bounce,
+  .anim-heartbeat,
+  .anim-spin-wobble,
+  .anim-pop-stagger {
     animation: none !important;
   }
 }

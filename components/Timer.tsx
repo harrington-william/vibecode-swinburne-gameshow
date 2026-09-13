@@ -12,7 +12,8 @@ function format(totalSeconds: number): string {
 
 export default function Timer({ secondsLeft, running }: TimerProps) {
   const expired = secondsLeft <= 0;
-  const hurrying = !expired && secondsLeft <= 30;
+  // Last quarter of the 60-second question clock.
+  const hurrying = !expired && secondsLeft <= 15;
 
   return (
     <div
@@ -21,14 +22,24 @@ export default function Timer({ secondsLeft, running }: TimerProps) {
       }`}
       aria-live="off"
     >
-      <span className={`text-lg ${running && hurrying ? "anim-flash" : ""}`}>
+      <span
+        className={`text-lg ${
+          expired
+            ? "anim-spin-wobble"
+            : running && hurrying
+              ? "anim-flash"
+              : running
+                ? "anim-spin-wobble"
+                : ""
+        }`}
+      >
         {expired ? "⌛" : "⏱️"}
       </span>
       <span className="font-display text-2xl font-bold tabular-nums">
         {format(secondsLeft)}
       </span>
       {expired && (
-        <span className="font-display text-xs font-bold uppercase tracking-wide">
+        <span className="anim-flash font-display text-xs font-bold uppercase tracking-wide">
           Time&apos;s up — keep going!
         </span>
       )}

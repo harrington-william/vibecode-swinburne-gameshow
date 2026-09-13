@@ -21,8 +21,10 @@ import HiddenImage from "./HiddenImage";
 import RoundEnd from "./RoundEnd";
 import RoundIntro from "./RoundIntro";
 import TeamScore from "./Scoreboard";
+import TeamStatus from "./TeamStatus";
 import Timer from "./Timer";
 import TrueFalseOptions from "./TrueFalseOptions";
+import TurnBoom from "./TurnBoom";
 
 type Scores = Record<TeamId, number>;
 
@@ -39,16 +41,21 @@ export default function GameShow() {
   const [scoresAtRoundStart, setScoresAtRoundStart] =
     useState<Scores>(ZERO_SCORES);
   const [answers, setAnswers] = useState<Answers>(EMPTY_ANSWERS);
-  const [secondsLeft, setSecondsLeft] = useState(ROUNDS[0].durationSeconds);
+  const [secondsLeft, setSecondsLeft] = useState(
+    ROUNDS[0].secondsPerQuestion,
+  );
   const [hintOpen, setHintOpen] = useState(false);
+  /** Which team the "BOOM — your turn!" overlay is cheering for, if any. */
+  const [boomTeam, setBoomTeam] = useState<TeamId | null>(null);
 
   const round = ROUNDS[roundIndex];
   const question = round.questions[questionIndex];
   const revealed = phase === "reveal";
   const activeTeam = phase === "question" ? nextTeam(answers) : null;
-  const timerRunning = phase === "question" || phase === "reveal";
+  // Each question gets its own clock; it freezes once both teams are in.
+  const timerRunning = phase === "question";
 
-  // The round clock. It stops at 0:00 but the game deliberately carries on.
+  // The question clock. It stops at 0:00 but the game deliberately carries on.
   useEffect(() => {
     if (!timerRunning) return;
     const id = setInterval(() => {
@@ -65,17 +72,26 @@ export default function GameShow() {
 
       const updated: Answers = { ...answers, [team]: { value, correct } };
       setAnswers(updated);
-      if (correct) {
+
+      const upNext = nextTeam(updated);
+      if (upNext === null) {
+        // Both teams are in. Only now do the scores move — and they move
+        // together, so a live score bump can't leak the answer to team 2.
+        const points = round.pointsPerQuestion;
         setScores((current) => ({
-          ...current,
-          [team]: current[team] + round.pointsPerQuestion,
+          t1: current.t1 + (updated.t1?.correct ? points : 0),
+          t2: current.t2 + (updated.t2?.correct ? points : 0),
         }));
+        setPhase("reveal");
+      } else {
+        // Team 1 just locked in — hand the turn over with a bang.
+        setBoomTeam(upNext);
       }
-      // Once both teams are in, the question is locked and we show the answer.
-      if (nextTeam(updated) === null) setPhase("reveal");
     },
     [answers, phase, round.pointsPerQuestion],
   );
+
+  const dismissBoom = useCallback(() => setBoomTeam(null), []);
 
   /** Host correction for the typed round — only while the reveal is on screen. */
   const overrideVerdict = useCallback(
@@ -99,7 +115,7 @@ export default function GameShow() {
 
   const startRound = () => {
     setScoresAtRoundStart(scores);
-    setSecondsLeft(round.durationSeconds);
+    setSecondsLeft(round.secondsPerQuestion);
     setQuestionIndex(0);
     setAnswers(EMPTY_ANSWERS);
     setHintOpen(false);
@@ -111,6 +127,7 @@ export default function GameShow() {
       setQuestionIndex(questionIndex + 1);
       setAnswers(EMPTY_ANSWERS);
       setHintOpen(false);
+      setSecondsLeft(round.secondsPerQuestion);
       setPhase("question");
     } else {
       setPhase("round-end");
@@ -124,7 +141,7 @@ export default function GameShow() {
       setQuestionIndex(0);
       setAnswers(EMPTY_ANSWERS);
       setHintOpen(false);
-      setSecondsLeft(ROUNDS[upcoming].durationSeconds);
+      setSecondsLeft(ROUNDS[upcoming].secondsPerQuestion);
       setPhase("intro");
     } else {
       setPhase("finished");
@@ -138,8 +155,9 @@ export default function GameShow() {
     setScores(ZERO_SCORES);
     setScoresAtRoundStart(ZERO_SCORES);
     setAnswers(EMPTY_ANSWERS);
-    setSecondsLeft(ROUNDS[0].durationSeconds);
+    setSecondsLeft(ROUNDS[0].secondsPerQuestion);
     setHintOpen(false);
+    setBoomTeam(null);
   };
 
   // Tiles come off one per finished question, corners first, centre last.
@@ -191,12 +209,27 @@ export default function GameShow() {
       />
     );
 
+  /** Who's up — one team pinned to each edge, above whatever is on screen. */
+  const teamStatusRow = !revealed && (
+    <div className="flex w-full flex-wrap items-center justify-between gap-3 px-1">
+      {TEAM_IDS.map((team) => (
+        <TeamStatus
+          key={team}
+          team={team}
+          active={team === activeTeam}
+          done={answers[team] !== null}
+        />
+      ))}
+    </div>
+  );
+
   const questionPanel = (
     <div className="flex w-full flex-col gap-4">
       <article className="sticker anim-pop rounded-[32px] bg-white px-5 py-6 sm:px-8">
         <div className="flex flex-wrap items-center gap-2">
           <span className="sticker-sm rounded-full bg-cream-deep px-3 py-1 font-display text-xs font-bold sm:text-sm">
-            {question.flag} {question.country} · {question.occasion}
+            <span className="anim-bounce inline-block">{question.flag}</span>{" "}
+            {question.country} · {question.occasion}
           </span>
           <span className="sticker-sm rounded-full bg-mango px-3 py-1 font-display text-xs font-black sm:text-sm">
             {round.pointsPerQuestion} pts
@@ -209,7 +242,8 @@ export default function GameShow() {
 
         {showHint ? (
           <p className="sticker-sm anim-slide mt-4 rounded-2xl bg-mango-soft px-4 py-3 font-display text-sm font-bold sm:text-base">
-            💡 {question.hint}
+            <span className="anim-heartbeat inline-block">💡</span>{" "}
+            {question.hint}
           </p>
         ) : (
           <button
@@ -222,36 +256,6 @@ export default function GameShow() {
         )}
       </article>
 
-      {!revealed && (
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {TEAM_IDS.map((team) => {
-            const done = answers[team] !== null;
-            const isActive = team === activeTeam;
-            const skin = isActive
-              ? `${team === "t1" ? "bg-berry" : "bg-grape"} text-white anim-wiggle`
-              : done
-                ? "bg-mint-soft"
-                : "bg-white opacity-60";
-            return (
-              <span
-                key={team}
-                className={`sticker-sm flex items-center gap-2 rounded-full px-4 py-2 font-display text-sm font-bold sm:text-base ${skin}`}
-              >
-                <span>{TEAMS[team].emoji}</span>
-                <span>{TEAMS[team].name}</span>
-                <span>
-                  {isActive
-                    ? "— your turn!"
-                    : done
-                      ? "locked in 🔒"
-                      : "waiting…"}
-                </span>
-              </span>
-            );
-          })}
-        </div>
-      )}
-
       {answerWidget}
 
       {revealed && (
@@ -263,7 +267,7 @@ export default function GameShow() {
                 return (
                   <span
                     key={team}
-                    className={`sticker-sm rounded-full px-4 py-1.5 font-display text-sm font-black ${
+                    className={`sticker-sm anim-stamp rounded-full px-4 py-1.5 font-display text-sm font-black ${
                       correct ? "bg-mint text-white" : "bg-white"
                     }`}
                   >
@@ -285,8 +289,9 @@ export default function GameShow() {
             className="squish sticker rounded-full bg-mango px-8 py-3.5 font-display text-lg font-black"
           >
             {questionIndex + 1 < round.questions.length
-              ? "Next question →"
-              : "Finish the round →"}
+              ? "Next question"
+              : "Finish the round"}{" "}
+            <span className="anim-bounce inline-block">👉</span>
           </button>
         </div>
       )}
@@ -307,7 +312,7 @@ export default function GameShow() {
       {!finished && (
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b-4 border-ink/10 bg-cream/85 px-3 py-3 backdrop-blur sm:px-6">
           <span className="sticker-sm flex items-center gap-2 rounded-full bg-white px-3 py-2 sm:px-4">
-            <span className="text-lg">{round.emoji}</span>
+            <span className="anim-bounce text-lg">{round.emoji}</span>
             <span className="font-display text-xs font-black sm:text-base">
               {round.title}
             </span>
@@ -344,12 +349,19 @@ export default function GameShow() {
 
         {isPlaying &&
           (roundIndex === MYSTERY_ROUND_INDEX ? (
-            <div className="grid w-full max-w-6xl items-start gap-6 lg:grid-cols-[1.05fr_1fr]">
-              <HiddenImage revealed={tilesRevealed} showAnswer={false} />
-              {questionPanel}
+            // Status row spans both columns: Team 1 over the image, Team 2 over the question.
+            <div className="flex w-full max-w-6xl flex-col gap-4">
+              {teamStatusRow}
+              <div className="grid w-full items-start gap-6 lg:grid-cols-[1.05fr_1fr]">
+                <HiddenImage revealed={tilesRevealed} showAnswer={false} />
+                {questionPanel}
+              </div>
             </div>
           ) : (
-            <div className="w-full max-w-3xl">{questionPanel}</div>
+            <div className="flex w-full max-w-3xl flex-col gap-4">
+              {teamStatusRow}
+              {questionPanel}
+            </div>
           ))}
 
         {phase === "round-end" && (
@@ -370,6 +382,8 @@ export default function GameShow() {
 
         {finished && <Finale scores={scores} onRestart={restart} />}
       </main>
+
+      {boomTeam && <TurnBoom team={boomTeam} onDone={dismissBoom} />}
 
       {!finished && (
         <>
