@@ -31,6 +31,16 @@ export default function RoundEnd({
 
         {children}
 
+        {/* The takeaway for the round — what all that food was really about */}
+        <div className="sticker-sm anim-slide w-full rounded-3xl bg-mango-soft px-5 py-4 text-left [animation-delay:250ms]">
+          <span className="font-display text-xs font-black uppercase tracking-widest text-ink-soft">
+            {round.emoji} What this round tells us
+          </span>
+          <p className="mt-1.5 font-display text-base font-bold leading-relaxed sm:text-lg">
+            {round.meaning}
+          </p>
+        </div>
+
         <div className="grid w-full gap-3 sm:grid-cols-2">
           {TEAM_IDS.map((team) => (
             <div

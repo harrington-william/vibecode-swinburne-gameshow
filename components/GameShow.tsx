@@ -16,6 +16,7 @@ import {
 } from "@/lib/game";
 import BlankInput from "./BlankInput";
 import ChoiceOptions from "./ChoiceOptions";
+import { DoubleUpButton, DoubleUpDialog } from "./DoubleUp";
 import Finale from "./Finale";
 import HiddenImage from "./HiddenImage";
 import RoundEnd from "./RoundEnd";
@@ -47,13 +48,20 @@ export default function GameShow() {
   const [hintOpen, setHintOpen] = useState(false);
   /** Which team the "BOOM — your turn!" overlay is cheering for, if any. */
   const [boomTeam, setBoomTeam] = useState<TeamId | null>(null);
+  /** Round 2's one-shot ×2: who spent it, and the prompt shown right after. */
+  const [doubledBy, setDoubledBy] = useState<TeamId | null>(null);
+  const [doublePrompt, setDoublePrompt] = useState<{
+    team: TeamId;
+    bonus: number;
+  } | null>(null);
 
   const round = ROUNDS[roundIndex];
   const question = round.questions[questionIndex];
   const revealed = phase === "reveal";
   const activeTeam = phase === "question" ? nextTeam(answers) : null;
-  // Each question gets its own clock; it freezes once both teams are in.
-  const timerRunning = phase === "question";
+  // Each question gets its own clock; it freezes once both teams are in,
+  // and pauses while the host is deciding on the ×2 prompt.
+  const timerRunning = phase === "question" && doublePrompt === null;
 
   // The question clock. It stops at 0:00 but the game deliberately carries on.
   useEffect(() => {
@@ -148,6 +156,34 @@ export default function GameShow() {
     }
   };
 
+  /**
+   * Round 2 host power: the question on screen is skipped and this team
+   * alone banks double its value, on the spot. One use per game. The host
+   * then chooses (via the prompt) whether Round 2 carries on or ends here.
+   */
+  const doubleUp = (team: TeamId) => {
+    if (roundIndex !== MYSTERY_ROUND_INDEX || doubledBy !== null) return;
+    const bonus = round.pointsPerQuestion * 2;
+    setScores((current) => ({ ...current, [team]: current[team] + bonus }));
+    setDoubledBy(team);
+    setDoublePrompt({ team, bonus });
+  };
+
+  /** Host chose to carry on: move past the skipped question. */
+  const continueRound = () => {
+    setDoublePrompt(null);
+    goToNextQuestion();
+  };
+
+  /**
+   * Host chose to end Round 2 here. We still stop at the round summary —
+   * dish reveal, scores and the round's meaning — before Round 3 begins.
+   */
+  const skipToNextRound = () => {
+    setDoublePrompt(null);
+    setPhase("round-end");
+  };
+
   const restart = () => {
     setPhase("intro");
     setRoundIndex(0);
@@ -158,6 +194,8 @@ export default function GameShow() {
     setSecondsLeft(ROUNDS[0].secondsPerQuestion);
     setHintOpen(false);
     setBoomTeam(null);
+    setDoubledBy(null);
+    setDoublePrompt(null);
   };
 
   // Tiles come off one per finished question, corners first, centre last.
@@ -180,6 +218,7 @@ export default function GameShow() {
   const showHint = hintOpen || question.kind === "blank";
   const isPlaying = phase === "question" || phase === "reveal";
   const finished = phase === "finished";
+  const showDoubleUp = isPlaying && roundIndex === MYSTERY_ROUND_INDEX;
 
   const answerWidget =
     question.kind === "choice" ? (
@@ -344,7 +383,11 @@ export default function GameShow() {
         </header>
       )}
 
-      <main className="flex flex-1 items-center justify-center px-3 pb-44 pt-5 sm:px-6 sm:pb-40">
+      <main
+        className={`flex flex-1 items-center justify-center px-3 pt-5 sm:px-6 ${
+          showDoubleUp ? "pb-56 sm:pb-52" : "pb-44 sm:pb-40"
+        }`}
+      >
         {phase === "intro" && <RoundIntro round={round} onStart={startRound} />}
 
         {isPlaying &&
@@ -385,23 +428,49 @@ export default function GameShow() {
 
       {boomTeam && <TurnBoom team={boomTeam} onDone={dismissBoom} />}
 
+      {doublePrompt && (
+        <DoubleUpDialog
+          team={doublePrompt.team}
+          bonus={doublePrompt.bonus}
+          wasLastQuestion={questionIndex + 1 >= round.questions.length}
+          onSkip={skipToNextRound}
+          onKeep={continueRound}
+        />
+      )}
+
       {!finished && (
         <>
-          <div className="fixed bottom-3 left-3 z-30 sm:bottom-5 sm:left-5">
+          <div className="fixed bottom-3 left-3 z-30 flex flex-col items-stretch gap-2 sm:bottom-5 sm:left-5">
             <TeamScore
               team="t1"
               score={scores.t1}
               active={activeTeam === "t1"}
               align="left"
             />
+            {showDoubleUp && (
+              <DoubleUpButton
+                team="t1"
+                bonus={round.pointsPerQuestion * 2}
+                spent={doubledBy !== null}
+                onPress={() => doubleUp("t1")}
+              />
+            )}
           </div>
-          <div className="fixed bottom-3 right-3 z-30 sm:bottom-5 sm:right-5">
+          <div className="fixed bottom-3 right-3 z-30 flex flex-col items-stretch gap-2 sm:bottom-5 sm:right-5">
             <TeamScore
               team="t2"
               score={scores.t2}
               active={activeTeam === "t2"}
               align="right"
             />
+            {showDoubleUp && (
+              <DoubleUpButton
+                team="t2"
+                bonus={round.pointsPerQuestion * 2}
+                spent={doubledBy !== null}
+                onPress={() => doubleUp("t2")}
+              />
+            )}
           </div>
         </>
       )}

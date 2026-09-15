@@ -50,6 +50,8 @@ export type Round = {
   /** Countdown for each individual question — the game carries on when it hits zero. */
   secondsPerQuestion: number;
   questions: Question[];
+  /** The takeaway shown on the round summary once the last question is done. */
+  meaning: string;
 };
 
 export const ROUNDS: Round[] = [
@@ -163,6 +165,8 @@ export const ROUNDS: Round[] = [
           "Ketupat is rice cooked inside a woven palm leaf pouch, a Hari Raya staple.",
       },
     ],
+    meaning:
+      "Food in Southeast Asia is closely connected to rice and agriculture. Rice is an important part of everyday life and many traditional dishes. During festivals and family gatherings, food also brings people together and keeps traditions alive.",
   },
   {
     number: 2,
@@ -243,6 +247,8 @@ export const ROUNDS: Round[] = [
           "Christmas pudding is actually a rich steamed dessert, usually containing dried fruit and spices. It is not a light, creamy custard.",
       },
     ],
+    meaning:
+      "Food in Europe is strongly connected to history and long-standing traditions. Many traditional dishes are passed down from one generation to another. During holidays, these foods are often enjoyed with family and become an important part of the celebration.",
   },
   {
     number: 3,
@@ -300,14 +306,16 @@ export const ROUNDS: Round[] = [
           "Pumpkin pie is a classic Thanksgiving dessert in Canada, served in October when the harvest comes in.",
       },
     ],
+    meaning:
+      "Food in the Americas shows the region's cultural diversity and different influences. Traditional dishes often use local ingredients and recipes from different communities. During festivals and special occasions, food brings these different cultures together.",
   },
 ];
 
 /** The dish hiding behind the Round 2 tiles. */
 export const MYSTERY_DISH = {
-  src: "/spaghetti.jpeg",
-  name: "Spaghetti",
-  emoji: "🍝",
+  src: "/pizza.jpeg",
+  name: "Pizza Margherita",
+  emoji: "🍕",
 };
 
 export const TEAMS = {
